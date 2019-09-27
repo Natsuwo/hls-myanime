@@ -34,7 +34,8 @@ module.exports = {
                 })
                 var thumbnail = get.data.attachments[0].url
                 var myanimedomain = process.env.MYANIMEDOMAIN
-                await axios.put(myanimedomain + '/api/episode/add-thumb', { source: drive_id, thumbnail })
+                var resp = await axios.put(myanimedomain + '/api/episode/add-thumb', { source: drive_id, thumbnail })
+                console.log(resp.data)
 
                 return resolve()
             } catch (err) {

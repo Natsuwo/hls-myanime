@@ -6,6 +6,10 @@ const SERVER_IP = process.env.SERVER_IP
 const BASEURL = process.env.BASEURL
 const { google } = require('googleapis')
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 module.exports = {
     async uploadToDrive(drive_id, user_id) {
         return new Promise(async (resolve, reject) => {
@@ -13,7 +17,9 @@ module.exports = {
                 baseURL: SERVER_IP,
                 headers: { user_id, drive_id, access_key: process.env.ACCESS_KEY }
             })
-            var auth = await Api.get('/v2/hls/get-auth')
+            // var auth = await Api.get('/v2/hls/get-auth')
+            // var results = auth.data.results
+            var auth = await axios.get(process.env.API + '/v2/get-auth')
             var results = auth.data.results
             try {
                 const oauth2Client = new google.auth.OAuth2()
@@ -77,6 +83,9 @@ module.exports = {
 
             } catch (err) {
                 console.log(err.message)
+                if (err.message === 'User rate limit exceeded.') {
+                    await sleep(30 * 60 * 1000);
+                }
                 return reject(new Error(`${drive_id} is upload fail. Error: ${err.message}`))
             }
         })

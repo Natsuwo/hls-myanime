@@ -50,7 +50,6 @@ module.exports = {
                 }
                 await Api.post('/v2/job/add-message', { message: `File: <strong>${drive_id}</strong> upload completed.` })
                 console.log('a file has deleted by system because upload completed.')
-                return process.exit(0);
 
             } catch (err) {
                 fs.appendFileSync('./logs/errors.log', `${new Date} ${err.message}\n`, { encoding: 'utf8' });

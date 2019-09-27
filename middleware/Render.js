@@ -25,11 +25,6 @@ module.exports = {
                     fs.mkdirSync(dir);
                 }
                 console.log('Render Video...')
-                var count = 0
-                var cou = setInterval(() => {
-                    count++
-                    console.log(count)
-                }, 1000)
                
                 ffmpeg(path, { timeout: 432000 }).addOptions([
                     '-codec copy',
@@ -40,7 +35,6 @@ module.exports = {
                     `-hls_segment_filename files/chunk/${fileName}_%03d.jpg`,
                     '-hls_playlist_type vod'
                 ]).output(`./files/m3u8/${fileName}.m3u8`).on('end', async () => {
-                    clearInterval(cou)
                     await Api.post('/v2/hls/update-drive', { downloaded: true, rendered: true })
                     return resolve()
                 }).on('error', function(err) {
@@ -73,6 +67,8 @@ module.exports = {
                     '-vframes 1',
                 ]).output(`./files/thumbnail/${fileName}.jpg`).on('end', () => {
                     return resolve()
+                }).on('error', function (err) {
+                    return reject(new Error(err.message))
                 }).run()
 
             } catch (err) {
