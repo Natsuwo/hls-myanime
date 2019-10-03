@@ -2,7 +2,7 @@ const fs = require('fs')
 const md5 = require('md5')
 const axios = require('axios')
 const { Client, Attachment } = require('discord.js')
-const token = process.env.TOKEN_DISCORD
+const { token } = require('../discord.json')
 const client = new Client()
 const channel = '624929128763621388'
 client.login(token).catch(err => {
@@ -12,7 +12,7 @@ client.on('error', (err) => console.error(err.message))
 client.on('ready', () => {
     console.log('Bot ready!')
 })
-axios.defaults.headers.common['Authorization'] = 'Bot ' + process.env.TOKEN_DISCORD
+axios.defaults.headers.common['Authorization'] = 'Bot ' + token
 
 module.exports = {
     async uploadThumbnail(drive_id, user_id) {

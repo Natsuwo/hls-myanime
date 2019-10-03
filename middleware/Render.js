@@ -25,9 +25,10 @@ module.exports = {
                     fs.mkdirSync(dir);
                 }
                 console.log('Render Video...')
-               
+
                 ffmpeg(path, { timeout: 432000 }).addOptions([
                     '-codec copy',
+                    '-bsf:v h264_mp4toannexb',
                     '-start_number 0',     // start the first .ts segment at index 0
                     '-hls_time 60',        // 10 second segment duration
                     '-f hls',               // HLS format
@@ -37,9 +38,9 @@ module.exports = {
                 ]).output(`./files/m3u8/${fileName}.m3u8`).on('end', async () => {
                     await Api.post('/v2/hls/update-drive', { downloaded: true, rendered: true })
                     return resolve()
-                }).on('error', function(err) {
+                }).on('error', function (err) {
                     return reject(new Error(err.message))
-                  }).run()
+                }).run()
 
             } catch (err) {
                 fs.appendFileSync('./logs/errors.log', `${new Date} ${err.message} at Render video\n`, { encoding: 'utf8' });

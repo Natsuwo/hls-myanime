@@ -25,7 +25,7 @@ module.exports = {
             var form = { client_id, client_secret, refresh_token, grant_type }
             var response = await axios.post('https://accounts.google.com/o/oauth2/token', form)
             var token = response.data.access_token
-            var folder_id = "0AO3XP_rFR_H-Uk9PVA"
+            var folder_id = "14HrxkNSB2hlkzMYKyFB3CKxjF-MZGRx3"
             res.send({ success: true, results: { token, folder_id } })
         } catch (err) {
             res.send({ success: false, error: err.message })
