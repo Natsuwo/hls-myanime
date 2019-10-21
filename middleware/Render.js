@@ -29,12 +29,16 @@ module.exports = {
                 ffmpeg(path, { timeout: 432000 }).addOptions([
                     '-codec copy',
                     '-bsf:v h264_mp4toannexb',
+                    '-hls_allow_cache 1',
+                    '-hls_list_size 0',
+                    '-hls_segment_size 18000000',
+                    '-hls_flags split_by_time+round_durations+delete_segments',
                     '-start_number 0',     // start the first .ts segment at index 0
-                    '-hls_time 60',        // 10 second segment duration
+                    '-hls_time 8',        // 10 second segment duration
                     '-f hls',               // HLS format
                     '-sn',
-                    `-hls_segment_filename files/chunk/${fileName}_%03d.jpg`,
-                    '-hls_playlist_type vod'
+                    // `-hls_segment_filename files/chunk/${fileName}.jpg`,
+                    `-hls_segment_filename files/chunk/${fileName}_%03d.jpg`
                 ]).output(`./files/m3u8/${fileName}.m3u8`).on('end', async () => {
                     await Api.post('/v2/hls/update-drive', { downloaded: true, rendered: true })
                     return resolve()

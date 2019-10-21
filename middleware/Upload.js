@@ -5,6 +5,7 @@ const axios = require('axios')
 const SERVER_IP = process.env.SERVER_IP
 const BASEURL = process.env.BASEURL
 const { google } = require('googleapis')
+const { createNewTeamDrive, changeFolder } = require('./helpers')
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -62,7 +63,7 @@ module.exports = {
                         supportsAllDrives: true
                     });
                     var file = fs.readFileSync(`${dir}/${fileName}.m3u8`, 'utf8');
-                    await Api.post('/v2/hls/add-hls', { chunk_name: item, drive_id: driveResponse.data.id, fileName })
+                    var driveId = driveResponse.data.id
                     await drive.permissions.create({
                         fileId: driveResponse.data.id,
                         resource: {
@@ -72,8 +73,9 @@ module.exports = {
                         },
                         supportsTeamDrives: true
                     });
-                    var result = file.replace(item, `/get-chunk/${fileName}/${item}`);
-                    await fs.writeFileSync(`${dir}/${fileName}.m3u8`, result, 'utf8');
+                    // var result = file.replace(item, `/get-chunk/${fileName}/${item}`);
+                    var result = file.replace(new RegExp(item, 'g'), `/get-hls/${driveId}`)
+                    await fs.writeFileSync(`${dir}/${fileName}.m3u8`, result, 'utf8')
                     console.log('Upload completed ' + item)
                 }
                 await Api.post('/v2/hls/upload-hls', { file: `${BASEURL}/m3u8/${fileName}.m3u8`, file_name: `${fileName}.m3u8` })
@@ -84,7 +86,18 @@ module.exports = {
             } catch (err) {
                 console.log(err.message)
                 if (err.message === 'User rate limit exceeded.') {
-                    await sleep(30 * 60 * 1000);
+                    return await sleep(30 * 60 * 1000);
+                }
+                if (err.message === "The file limit for this shared drive has been exceeded.") {
+                    var { token } = results
+                    var new_folder = await createNewTeamDrive(token)
+                    if (new_folder) {
+                        console.log('wait 5 seconds...')
+                        await sleep(5000)
+                        console.log('create new folder')
+                        await changeFolder(new_folder)
+                        return module.exports.uploadToDrive(drive_id, user_id)
+                    }
                 }
                 return reject(new Error(`${drive_id} is upload fail. Error: ${err.message}`))
             }

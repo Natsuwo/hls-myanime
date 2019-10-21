@@ -32,7 +32,8 @@
     "node-downloader-helper": "^1.0.11",
     "request": "^2.88.0",
     "request-progress": "^3.0.0",
-    "tough-cookie": "^3.0.1"
+    "tough-cookie": "^3.0.1",
+    "uuidv4": "^5.0.1"
   },
   "devDependencies": {
     "nodemon": "^1.19.1"
