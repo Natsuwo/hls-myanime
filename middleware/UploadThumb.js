@@ -2,6 +2,7 @@ const fs = require('fs')
 const md5 = require('md5')
 const axios = require('axios')
 const { Client, Attachment } = require('discord.js')
+const tinify = require("tinify")
 const { token } = require('../discord.json')
 const client = new Client()
 const channel = '624929128763621388'
@@ -24,22 +25,36 @@ module.exports = {
                 if (!file) {
                     return resolve()
                 }
+                var tinykey = fs.readFileSync('./tinify.json', { encoding: "utf8" })
+                tinykey = JSON.parse(tinykey)
+                var rankey = tinykey[Math.floor(Math.random() * tinykey.length)]
+                tinify.key = rankey
                 console.log('Upload Thumbnail...')
-                var attach = new Attachment(path, name + '.jpg')
-                var resp = await client.channels.get(channel).send(attach).catch(err => {
-                    return resolve()
+                tinify.fromFile(path).toBuffer(async (err, resultData) => {
+                    if (err) {
+                        console.log("err tinify", err.message)
+                        return resolve()
+                    } else {
+                        var attach = new Attachment(resultData, name + '.jpg')
+                        var resp = await client.channels.get(channel).send(attach).catch(err => {
+                            return resolve()
+                        })
+                        var get = await axios.get('https://discordapp.com/api/channels/' + channel + '/messages/' + resp.id).catch(err => {
+                            return resolve()
+                        })
+                        var thumbnail = get.data.attachments[0].url
+                        var myanimedomain = process.env.MYANIMEDOMAIN
+                        var resp = await axios.put(myanimedomain + '/api/episode/add-thumb', { source: drive_id, thumbnail })
+                        console.log(resp.data)
+                    }
                 })
-                var get = await axios.get('https://discordapp.com/api/channels/' + channel + '/messages/' + resp.id).catch(err => {
-                    return resolve()
-                })
-                var thumbnail = get.data.attachments[0].url
-                var myanimedomain = process.env.MYANIMEDOMAIN
-                var resp = await axios.put(myanimedomain + '/api/episode/add-thumb', { source: drive_id, thumbnail })
-                console.log(resp.data)
 
                 return resolve()
             } catch (err) {
-                return reject(new Error(`${drive_id} is upload thumbnail fail. Error: ${err.message}`))
+                console.log("error catch", err.message)
+                await fs.appendFileSync('./logs/errors.log', `${new Date} ${err.message}\n`, { encoding: 'utf8' });
+                return resolve()
+                // return reject(new Error(`${drive_id} is upload thumbnail fail. Error: ${err.message}`))
             }
         })
     }
